@@ -44,7 +44,7 @@ namespace ModelsComponents
 
         private Task<float[]> EmbeddingAsync(Image<Rgb24> face, CancellationToken cancellationToken)
         {
-            return Task.Factory.StartNew(() => {
+            return Task.Factory.StartNew(result => {
                 bool sessionLock = false;
 
                 float[] embedding = null;
@@ -64,7 +64,7 @@ namespace ModelsComponents
 
                 return embedding;
             },
-            cancellationToken);
+            cancellationToken, TaskCreationOptions.LongRunning);
         }
 
         private static DenseTensor<float> ImageToTensor(Image<Rgb24> img)
