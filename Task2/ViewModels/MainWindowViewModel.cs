@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using ModelsComponents;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Task2.Commands.Base;
 using Task2.Models;
 
@@ -40,11 +42,11 @@ namespace Task2.ViewModels
 
         //-------------------------------------------------------------------
 
-        private string[] _imageName;
-        public string[] ImageName
+        private string[] _imagePaths;
+        public string[] ImagePaths
         {
-            get => _imageName;
-            set => Set(ref _imageName, value);
+            get => _imagePaths;
+            set => Set(ref _imagePaths, value);
         }
 
         private ComparisonResult[,] _comparisonResults = null;
@@ -97,7 +99,6 @@ namespace Task2.ViewModels
 
             ProgressValue = 0;
 
-            var imageNames = new List<string>();
             var imagePaths = new List<string>();
             var embeddings = new List<float[]>();
 
@@ -108,11 +109,10 @@ namespace Task2.ViewModels
 
                 foreach (var imageFileInfo in new DirectoryInfo(folderPath).GetFiles())
                 {
-                    imageNames.Add(imageFileInfo.Name);
                     imagePaths.Add(imageFileInfo.FullName);
                 }
 
-                CountImages = imageNames.Count;
+                CountImages = imagePaths.Count;
 
                 await foreach (var item in embeder.GetEmbeddingAsync(imagePaths).WithCancellation(cts.Token))
                 {
@@ -120,7 +120,7 @@ namespace Task2.ViewModels
                     ProgressValue += 1;
                 }
 
-                ImageName = imageNames.ToArray();
+                ImagePaths = imagePaths.ToArray();
                 ComparisonResults = ComparisonResultCreator.Create(embeddings);
 
                 if (_progressValue == _countImages)
