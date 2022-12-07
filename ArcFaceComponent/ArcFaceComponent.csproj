@@ -2,16 +2,33 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <LangVersion>9.0</LangVersion>
+    <Authors>Irina Сhakak </Authors>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>ArcFaceComponent</Title>
+    <Version>0.0.2</Version>
+    <Product>ArcFaceComponent</Product>
+    <Description>Component for asynchronously applying the ArcFace network</Description>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Microsoft.ML.OnnxRuntime" />
+    <None Remove="arcfaceresnet100-8.onnx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="arcfaceresnet100-8.onnx" />
+  </ItemGroup>
+
+
+
+
+  <ItemGroup>
     <None Remove="SixLabors.ImageSharp" />
+    <None Remove="Microsoft.ML.OnnxRuntime" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.13.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.13.1" />
   </ItemGroup>
 </Project>
