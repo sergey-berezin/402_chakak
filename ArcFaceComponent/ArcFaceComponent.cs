@@ -1,7 +1,8 @@
-﻿using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -69,9 +70,13 @@ namespace ModelsComponents
 
         private static DenseTensor<float> ImageToTensor(Image<Rgb24> img)
         {
-            var width = img.Width;
-            var height = img.Height;
+            var width = 112;
+            var height = 112;
             var tensor = new DenseTensor<float>(new[] { 1, 3, height, width });
+
+            img.Mutate(
+                x => x.Resize(width, height)
+            );
 
             img.ProcessPixelRows(pa => {
                 for (int y = 0; y < height; y++)
