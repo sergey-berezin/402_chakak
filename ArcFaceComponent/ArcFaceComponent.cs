@@ -1,4 +1,4 @@
-﻿using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -17,32 +17,20 @@ namespace ModelsComponents
     {
 
         readonly InferenceSession _session;
-        const string _MODEL_NAME = "ArcFaceComponent.arcfaceresnet100-8.onnx";
-
         public ArcFaceComponent()
         {
-            using var modelStream = typeof(ArcFaceComponent).Assembly.GetManifestResourceStream(_MODEL_NAME);
+            using var modelStream = typeof(ArcFaceComponent).Assembly.GetManifestResourceStream("ArcFace.onnx");
             using var memoryStream = new MemoryStream();
             modelStream.CopyTo(memoryStream);
             _session = new InferenceSession(memoryStream.ToArray());
         }
 
-        public async IAsyncEnumerable<float[]> GetEmbeddingAsync(IEnumerable<string> imagesPaths, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async Task<float[]> GetEmbeddingAsync(byte[] byte_img, CancellationToken cancellationToken = default)
         {
-            foreach (var imagePath in imagesPaths)
-            {
-                using var curFace = Image.Load<Rgb24>(imagePath);
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                yield return await EmbeddingAsync(curFace, cancellationToken).ConfigureAwait(false);
-            }
+            return await EmbeddingAsync(byte_img, cancellationToken).ConfigureAwait(false);
         }
 
-        private Task<float[]> EmbeddingAsync(Image<Rgb24> face, CancellationToken cancellationToken)
+        private Task<float[]> EmbeddingAsync(byte[] face, CancellationToken cancellationToken)
         {
             return Task.Factory.StartNew(result => {
                 bool sessionLock = false;
@@ -69,8 +57,8 @@ namespace ModelsComponents
 
         private static DenseTensor<float> ImageToTensor(Image<Rgb24> img)
         {
-            var width = img.Width;
-            var height = img.Height;
+            var width = 112;
+            var height = 112;
             var tensor = new DenseTensor<float>(new[] { 1, 3, height, width });
 
             img.ProcessPixelRows(pa => {
@@ -95,8 +83,10 @@ namespace ModelsComponents
             return v.Select(x => x / len).ToArray();
         }
 
-        private static float[] GetEmbeddings(Image<Rgb24> face, InferenceSession session)
+        private static float[] GetEmbeddings(byte[] _face, InferenceSession session)
         {
+            var stream1 = new MemoryStream(_face);
+            var face = Image.Load<Rgb24>(stream1);
             var inputs = new List<NamedOnnxValue> { NamedOnnxValue.CreateFromTensor("data", ImageToTensor(face)) };
             using IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results = session.Run(inputs);
             return Normalize(results.First(v => v.Name == "fc1").AsEnumerable<float>().ToArray());
