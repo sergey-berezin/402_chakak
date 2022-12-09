@@ -8,9 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="ArcFaceComponent" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="ArcFaceComponent" Version="1.0.0" />
+    <PackageReference Include="ArcFaceComponent" Version="0.0.2" />
   </ItemGroup>
 </Project>
