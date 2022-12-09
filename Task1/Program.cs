@@ -45,3 +45,4 @@ for (int idx = 0; idx < embeddings.Count; ++idx)
         Console.WriteLine($"Similarity =  {Similarity(embeddings[idx], embeddings[jdx])}\n");
     }
 }
+

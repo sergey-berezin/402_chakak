@@ -10,5 +10,4 @@
   <ItemGroup>
     <PackageReference Include="ArcFaceComponent" Version="0.0.2" />
   </ItemGroup>
-
 </Project>

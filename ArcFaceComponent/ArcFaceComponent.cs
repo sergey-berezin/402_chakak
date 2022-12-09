@@ -24,7 +24,6 @@ namespace ModelsComponents
             modelStream.CopyTo(memoryStream);
             _session = new InferenceSession(memoryStream.ToArray());
         }
-
         public async Task<float[]> GetEmbeddingAsync(byte[] byte_img, CancellationToken cancellationToken = default)
         {
             return await EmbeddingAsync(byte_img, cancellationToken).ConfigureAwait(false);
@@ -98,3 +97,4 @@ namespace ModelsComponents
         }
     }
 }
+
