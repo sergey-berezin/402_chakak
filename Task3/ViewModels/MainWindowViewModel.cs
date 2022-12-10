@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -151,18 +151,11 @@ namespace Task3.ViewModels
                         imagePaths.Add(item.Name);
                     }
                     ComparisonResults = new ComparisonResult[imagePaths.Count, imagePaths.Count];
-                    int i = 0;
-                    foreach (var item in db.Images)
+
+                    foreach (var item in db.Embeddings)
                     {
-                        int j = 0;
-                        var query = db.Embeddings.Where(i => i.ImageId.Equals(item.ImageId));
-                        foreach (var item1 in query)
-                        {
-                            ComparisonResults[i, j].distance = item1.distance;
-                            ComparisonResults[i, j].similarity = item1.similarity;
-                            j++;
-                        }
-                        i++;
+                        ComparisonResults[item.PairImage1, item.PairImage2].distance = item.distance;
+                        ComparisonResults[item.PairImage1, item.PairImage2].similarity = item.similarity;
                     }
 
                     ImagePaths = imagePaths.ToArray();
@@ -199,18 +192,26 @@ namespace Task3.ViewModels
                     string hashcode = GetHash(img_byte);
                     using (DataContext db = new DataContext())
                     {
-                        if (db.Images.Any(h => h.Hashcode.Equals(hashcode))) //
+                        var q1 = db.Images.Where(h => h.Hashcode == hashcode);
+                        if (q1.FirstOrDefault() != null)
                         {
-                            if (!db.bytes.Any(b => b.BLOB.Equals(img_byte)))
+                            foreach (var item in q1)
                             {
-                                db.Images.Add(new Task3.Models.Image { Hashcode = hashcode, Name = imageFile });
-                                db.SaveChanges();
-                                var query = db.Images.OrderBy(d => d.ImageId).Last();
-                                db.bytes.Add(new byteImage { BLOB = img_byte, ImageId = query.ImageId });
-                                db.SaveChanges();
-                                embeddings.Add(await embeder.GetEmbeddingAsync(img_byte, cts.Token));
-                                ProgressValue += 1;
+                                var q2 = db.bytes.Where(b => b.ImageId == item.ImageId).FirstOrDefault();
+                                if (q2 != null && q2.BLOB != img_byte)
+                                {
+
+                                    db.Images.Add(new Task3.Models.Image { Hashcode = hashcode, Name = imageFile });
+                                    db.SaveChanges();
+                                    var query = db.Images.OrderBy(d => d.ImageId).Last();
+                                    db.bytes.Add(new byteImage { BLOB = img_byte, ImageId = query.ImageId });
+                                    db.SaveChanges();
+                                    embeddings.Add(await embeder.GetEmbeddingAsync(img_byte, cts.Token));
+                                    ProgressValue += 1;
+
+                                }
                             }
+
                         }
                         else
                         {
@@ -231,11 +232,9 @@ namespace Task3.ViewModels
                     int i = 0;
                     foreach (var item in db.Images)
                     {
-
                         for (int j = 0; j < ComparisonResults.GetLength(0); j++)
                         {
-                            db.Embeddings.Add(new Embedding { ImageId = item.ImageId, distance = ComparisonResults[i, j].distance, similarity = ComparisonResults[i, j].similarity });
-
+                            db.Embeddings.Add(new Embedding { ImageId = item.ImageId, distance = ComparisonResults[i, j].distance, similarity = ComparisonResults[i, j].similarity, PairImage1 = i, PairImage2 = j });
                         }
                         i++;
                     }
