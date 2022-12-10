@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,11 +27,15 @@ namespace Task3.Models
     public class Embedding
     {
         public int EmbeddingId { get; set; }
-        public float distance { get; set; }
 
+        public float distance { get; set; }
         public float similarity { get; set; }
 
+        public int PairImage1 { get; set; }
+        public int PairImage2 { get; set; }
+
         public int ImageId { get; set; }
+        public Image Image { get; set; }
 
     }
     public class byteImage
@@ -41,5 +45,7 @@ namespace Task3.Models
         [Key]
         [ForeignKey(nameof(Image))]
         public int ImageId { get; set; }
+        public Image Image { get; set; }
+
     }
 }
