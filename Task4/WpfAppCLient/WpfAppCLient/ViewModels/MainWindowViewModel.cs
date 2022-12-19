@@ -1,26 +1,13 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using System.Security.Cryptography;
-using System.Linq;
 using System;
-using System.Reflection.Metadata;
-using static System.Reflection.Metadata.BlobBuilder;
-using System.Collections.ObjectModel;
-using SixLabors.ImageSharp.Memory;
-using System.Drawing.Imaging;
-using System.Drawing;
 using System.Net.Http;
 using WpfAppCLient.Commands.Base;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Windows.Documents;
 using Polly;
 using Polly.Retry;
 
@@ -31,7 +18,7 @@ namespace WpfAppCLient.ViewModels
         private CancellationTokenSource cts;
 
         //-------------------------------------------------------------------
-        
+
         public string url = "https://localhost:7230/";
         public string imagesId
         {
@@ -67,7 +54,7 @@ namespace WpfAppCLient.ViewModels
             get => _imagePaths;
             set => Set(ref _imagePaths, value);
         }
-        
+
         private ComparisonResult[,] _comparisonResults = null;
         public ComparisonResult[,] ComparisonResults
         {
@@ -80,7 +67,7 @@ namespace WpfAppCLient.ViewModels
         public Command LoadComparisonCommand { get; }
         private async void LoadComparisonCommandExecute(object _)
         {
-            
+
             await LoadComparison();
 
         }
@@ -115,7 +102,6 @@ namespace WpfAppCLient.ViewModels
 
             return !IsComparison;
         }
-
         public Command DeleteComparisonCommand { get; }
         private void DeleteComparisonCommandExecute(object _)
         {
@@ -126,9 +112,16 @@ namespace WpfAppCLient.ViewModels
         {
             return IsComparison;
         }
+        private AsyncRetryPolicy retryPolicy;
+        private Random jitterer = new Random();
+
         public MainWindowViewModel()
         {
-           
+            retryPolicy = Policy
+                .Handle<HttpRequestException>()
+                .WaitAndRetryAsync(5,
+                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))  // exponential back-off: 2, 4, 8 etc
+                                  + TimeSpan.FromMilliseconds(jitterer.Next(0, 1000)));  // plus some jitter: up to 1 second
             StartComparisonCommand = new Command(StartComparisonCommandExecute, StartComparisonCommandCanExecute);
             CancelComparisonCommand = new Command(CancelComparisonCommandExecute, CancelComparisonCommandCanExecute);
             DeleteComparisonCommand = new Command(DeleteComparisonCommandExecute, DeleteComparisonCommandCanExecute);
@@ -138,14 +131,6 @@ namespace WpfAppCLient.ViewModels
         private async Task LoadComparison()
         {
             var imagePaths = new List<string>();
-
-            var jitterer = new Random();
-
-            var retryPolicy = Policy
-                .Handle<HttpRequestException>()
-                .WaitAndRetryAsync(5,
-                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))  // exponential back-off: 2, 4, 8 etc
-                                  + TimeSpan.FromMilliseconds(jitterer.Next(0, 1000)));  // plus some jitter: up to 1 second
             try
             {
                 await retryPolicy.ExecuteAsync(async () => {
@@ -190,7 +175,7 @@ namespace WpfAppCLient.ViewModels
             {
 
             }
-            
+
         }
         private async Task StartComparison()
         {
@@ -220,14 +205,6 @@ namespace WpfAppCLient.ViewModels
                         Name = imageFile
                     });
                 }
-
-                var jitterer = new Random();
-
-                var retryPolicy = Policy
-                    .Handle<HttpRequestException>()
-                    .WaitAndRetryAsync(5,
-                        retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))  // exponential back-off: 2, 4, 8 etc
-                                      + TimeSpan.FromMilliseconds(jitterer.Next(0, 1000)));  // plus some jitter: up to 1 second
                 try
                 {
                     await retryPolicy.ExecuteAsync(async () =>
@@ -258,7 +235,7 @@ namespace WpfAppCLient.ViewModels
                         }
                     });
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MessageBox.Show("Ошибка доступа к серверу!");
                 }
@@ -266,7 +243,7 @@ namespace WpfAppCLient.ViewModels
                 {
                     MessageBox.Show("Распознавание окончено.", "Внимание");
                 }
-                
+
             }
         }
         private void CancelComparison()
@@ -276,19 +253,10 @@ namespace WpfAppCLient.ViewModels
         }
         private async void DeleteComparison()
         {
-
-            var jitterer = new Random();
-
-            var retryPolicy = Policy
-                .Handle<HttpRequestException>()
-                .WaitAndRetryAsync(5,
-                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))  // exponential back-off: 2, 4, 8 etc
-                                  + TimeSpan.FromMilliseconds(jitterer.Next(0, 1000)));  // plus some jitter: up to 1 second
             if (ImagePaths != null)
                 ImagePaths = null;
             if (ComparisonResults != null)
                 ComparisonResults = null;
-
             try
             {
                 await retryPolicy.ExecuteAsync(async () =>
@@ -309,7 +277,7 @@ namespace WpfAppCLient.ViewModels
             {
                 MessageBox.Show("Данные были удалены");
             }
-            
+
         }
     }
 }
