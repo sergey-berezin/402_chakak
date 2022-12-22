@@ -133,7 +133,8 @@ namespace WpfAppCLient.ViewModels
             var imagePaths = new List<string>();
             try
             {
-                await retryPolicy.ExecuteAsync(async () => {
+                await retryPolicy.ExecuteAsync(async () =>
+                {
 
                     var httpclient = new HttpClient();
                     httpclient.BaseAddress = new Uri(url);
@@ -146,26 +147,49 @@ namespace WpfAppCLient.ViewModels
                     {
                         imagePaths.Add(item.Name);
                     }
-                    if (imagePaths.Count > 0)
-                    {
-                        response = await httpclient.GetAsync("api/Images/Res/");
-                        string results = await response.Content.ReadFromJsonAsync<string>();
-                        string[] ss = results.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                        ComparisonResults = new ComparisonResult[imagePaths.Count, imagePaths.Count];
-                        ImagePaths = imagePaths.ToArray();
-                        foreach (string s in ss)
-                        {
-                            string[] res = s.Split(' ');
-                            ComparisonResults[int.Parse(res[0]), int.Parse(res[1])].distance = float.Parse(res[2]);
-                            ComparisonResults[int.Parse(res[0]), int.Parse(res[1])].similarity = float.Parse(res[3]);
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("База данных пуста");
-                    }
 
                 });
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка доступа к серверу!");
+            }
+            finally
+            {
+
+            }
+
+            try
+            { 
+                await retryPolicy.ExecuteAsync(async () =>
+                {
+
+                    var httpclient = new HttpClient();
+                    httpclient.BaseAddress = new Uri(url);
+                    httpclient.DefaultRequestHeaders.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue("application/json"));
+
+                        if (imagePaths.Count > 0)
+                        {
+                             HttpResponseMessage response = await httpclient.GetAsync("api/Images/Res/");
+                            string results = await response.Content.ReadFromJsonAsync<string>();
+                            string[] ss = results.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                            ComparisonResults = new ComparisonResult[imagePaths.Count, imagePaths.Count];
+                            ImagePaths = imagePaths.ToArray();
+                            foreach (string s in ss)
+                            {
+                                string[] res = s.Split(' ');
+                                ComparisonResults[int.Parse(res[0]), int.Parse(res[1])].distance = float.Parse(res[2]);
+                                ComparisonResults[int.Parse(res[0]), int.Parse(res[1])].similarity = float.Parse(res[3]);
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("База данных пуста");
+                        }
+
+                    });
             }
             catch (Exception ex)
             {
@@ -222,7 +246,27 @@ namespace WpfAppCLient.ViewModels
                         {
                             imagesId += item.ToString() + "\n";
                         }
-                        response = await httpclient.GetAsync("api/Images/Res/");
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Ошибка доступа к серверу!");
+                }
+                finally
+                {
+                    
+                }
+
+
+                try
+                {
+                    await retryPolicy.ExecuteAsync(async () =>
+                    {
+                        var httpclient = new HttpClient();
+                        httpclient.BaseAddress = new Uri(url);
+                        httpclient.DefaultRequestHeaders.Accept.Add(
+                        new MediaTypeWithQualityHeaderValue("application/json"));
+                        HttpResponseMessage response = await httpclient.GetAsync("api/Images/Res/");
                         string results = await response.Content.ReadFromJsonAsync<string>();
                         string[] ss = results.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
                         ComparisonResults = new ComparisonResult[imagePaths.Count, imagePaths.Count];
